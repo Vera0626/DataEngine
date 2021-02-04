@@ -1,0 +1,37 @@
+import pandas as pd
+#数据加载
+df = pd.read_csv('car_complain.csv')
+df
+
+#数据清洗，将别名合并
+def f(x):
+    x =x.replace('一汽-大众','一汽大众')
+    return x
+
+df['brand'] = df['brand'].apply(f)
+df
+
+#数据预处理，拆分problem类型 => 多个字段
+result = df.drop('problem', axis=1).join(df.problem.str.get_dummies(','))
+result
+
+#对数据进行探索：1.品牌投诉总数，车型投诉总数
+#品牌投诉总数
+df1=df.groupby(['brand'])['id'].agg(['count']).sort_values('count',ascending=False)
+df1
+
+#车型投诉总数
+df2=df.groupby(['car_model'])['id'].agg(['count']).sort_values('count',ascending=False)
+df2
+
+#对数据进行探索：2.哪个品牌的平均车型投诉最多
+#计算每个品牌的有投诉的车型数量
+n= df.groupby(['brand'])['car_model'].agg(['nunique'])
+n
+df3=df1.merge(n, left_index=True, right_index=True, how='left')
+df3['mean']=df3['count']/df3['nunique']
+df3
+
+#各品牌的平均车型投诉
+df4=df3.sort_values('mean',ascending=False)
+df4
